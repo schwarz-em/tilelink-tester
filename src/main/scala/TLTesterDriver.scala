@@ -21,5 +21,5 @@ class TLTesterDriver(addrWidth: Int, dataWidth: Int, idBits: Int, maxInflight: I
 
   addResource("/tilelink-tester/vsrc/TLTesterDriver.v")
   addResource("/tilelink-tester/csrc/TLTesterDriver.cc")
-  addResource("/tilelink-tester/csrc/dataset.h")
+  //addResource("/tilelink-tester/csrc/dataset.h")
 }
