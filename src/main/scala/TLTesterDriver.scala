@@ -18,5 +18,5 @@ class TLTesterDriver(params: TesterParams) extends BlackBox(Map(
 
   addResource("/tilelink-tester/vsrc/TLTesterDriver.v")
   addResource("/tilelink-tester/csrc/TLTesterDriver.cc")
-  addResource("/tilelink-tester/csrc/dataset.h")
+  //addResource("/tilelink-tester/csrc/dataset.h")
 }
