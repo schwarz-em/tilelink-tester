@@ -17,11 +17,12 @@ trait HasTesterSuccessIO { this: Module =>
 
 class TesterDebug(implicit p: Parameters) extends LazyModule {
 
-  val testerParams = TesterParams(beatBytes=4*1)
+  //val testerParams = TesterParams(beatBytes=4*1)
+  val testerParams = p(TesterParamsKey)
 
-  val tltester = LazyModule(new TileLinkTester(testerParams))
+  val tltester = LazyModule(new TileLinkTester)
 
-  //val beatBytes = 32
+  val bb = 32
   // val node = TLManagerNode(Seq(TLSlavePortParameters.v1(
   //   Seq(TLSlaveParameters.v1(
   //     address = Seq(AddressSet(BigInt(0x100000000L), BigInt(0x0FFFFL))),
@@ -47,7 +48,8 @@ class TesterDebug(implicit p: Parameters) extends LazyModule {
     // in.a.ready := true.B
     // in.d.valid := false.B
 
-    val driver = Module(new TLTesterDriver(testerParams))
+    val driver = Module(new TLTesterDriver(testerParams.addrWidth, testerParams.dataWidth, log2Up(testerParams.maxInflight), testerParams.maxInflight)) //ew
+    //val driver = Module(new TLTesterDriver(testerParams.addrWidth, testerParams.dataWidth, 32, testerParams.maxInflight)) //ew
 
     driver.io.tlt <> tltester.module.io
     driver.io.clock := clock
