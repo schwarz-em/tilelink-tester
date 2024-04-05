@@ -1,14 +1,11 @@
 package tlt
 
-// FIXME: clean up imports
 import chisel3._
 import chisel3.util._
 import freechips.rocketchip.diplomacy._
 import freechips.rocketchip.tilelink._
 import org.chipsalliance.cde.config.{Parameters, Field}
 import freechips.rocketchip.util._
-//import freechips.rocketchip.prci._
-//import freechips.rocketchip.subsystem._
 
 case object TesterParamsKey extends Field[TesterParams]
 
@@ -21,7 +18,7 @@ trait HasTesterParams {
 }
 
 case class TesterParams (
-  maxInflight: Int = 4,
+  maxInflight: Int = 1,
   addrWidth: Int = 64,
   dataWidth: Int = 32,
   beatBytes: Int
@@ -29,7 +26,6 @@ case class TesterParams (
 
 abstract class TesterBundle(implicit val p: Parameters) extends ParameterizedBundle()(p) with HasTesterParams
 
-// TODO: pass in tester params, this is bad scala
 class TesterReq(implicit p: Parameters) extends TesterBundle {
   val addr = Output(UInt(tParams.addrWidth.W))
   val data = Output(UInt(tParams.dataWidth.W))
@@ -42,7 +38,7 @@ class TesterResp(implicit p: Parameters) extends TesterBundle {
   val id = Output(UInt(idBits.W))
 }
 
-class TesterIO(implicit p: Parameters) extends TesterBundle { //does this need params?
+class TesterIO(implicit p: Parameters) extends TesterBundle {
   val req = Flipped(new DecoupledIO(new TesterReq))
   val resp = new ValidIO(new TesterResp)
 }
@@ -56,12 +52,11 @@ class TileLinkTester(implicit p: Parameters) extends LazyModule with HasTesterPa
     ))
   )))
     
-  lazy val module = new Impl // TileLinkTesterModuleImp(this)
+  lazy val module = new Impl
   class Impl extends LazyModuleImp(this) {
     val io = IO(new TesterIO)
 
     val (out, edge) = node.out(0)
-    //val beatBytes = 5.U //32.U // FIXME: don't hardcode
 
     io.req.ready := out.a.ready
     out.d.ready := true.B

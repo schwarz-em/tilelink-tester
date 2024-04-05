@@ -16,7 +16,6 @@ import "DPI-C" function void tick
   output longint unsigned done
 );
 
-// TODO: add widths
 module TLTesterDriver #(ADDR_BITS, DATA_BITS, ID_BITS, MAX_INFLIGHT) (
   input                   clock,
   input                   reset,

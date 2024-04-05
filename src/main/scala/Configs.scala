@@ -9,6 +9,6 @@ class TLTesterConfig(p: TesterParams) extends Config((site, here, up) => {
   case TesterParamsKey => p
 })
 
-class DebugTLTConfig extends TLTesterConfig(
-    new TesterParams(beatBytes=4)
+class DebugTLTConfig0 extends TLTesterConfig(
+    new TesterParams(maxInflight=4, beatBytes=4)
 )

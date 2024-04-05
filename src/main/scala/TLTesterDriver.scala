@@ -5,7 +5,6 @@ import chisel3.experimental.IntParam
 import chisel3.util.HasBlackBoxResource
 import org.chipsalliance.cde.config.Parameters
 
-// TODO: fix scala so that testdriver and tester always have the same params
 class TLTesterDriver(addrWidth: Int, dataWidth: Int, idBits: Int, maxInflight: Int)(implicit p: Parameters) extends BlackBox(Map(
                   "ADDR_BITS" -> IntParam(addrWidth),
                   "DATA_BITS" -> IntParam(dataWidth),
@@ -21,5 +20,4 @@ class TLTesterDriver(addrWidth: Int, dataWidth: Int, idBits: Int, maxInflight: I
 
   addResource("/tilelink-tester/vsrc/TLTesterDriver.v")
   addResource("/tilelink-tester/csrc/TLTesterDriver.cc")
-  //addResource("/tilelink-tester/csrc/dataset.h")
 }
