@@ -100,7 +100,7 @@ extern "C" void tick(
     unsigned char *done
 ) {
     
-    cout << "inside tick\n";
+    //cout << "tick\n";
 
     bool req_fire = last_valid && req_ready;
     if (req_fire) {
@@ -112,7 +112,7 @@ extern "C" void tick(
     assert((resp_idx <= req_idx) && "More responses seen than requests");
 
     if (resp_valid) {
-        cout << "checking resp\n";
+        cout << "Recieved RESP " << resp_idx << " --- data=" << resp_data << ", id=" << resp_id << ", write=" << req_types[resp_idx] << "\n";
         // cout << "resp_valid: " << resp_valid << "\n";
         // bool check = resp_valid == 0;
         // cout << "resp_valid==0: " << check << "\n";
@@ -128,8 +128,8 @@ extern "C" void tick(
         next_id++;
     }
     bool id_avail = next_id != used.size();
-    cout << "next id: " << next_id << "\n";
-    cout << "id avail: " << id_avail << "\n";
+    //cout << "next id: " << next_id << "\n";
+    //cout << "id avail: " << id_avail << "\n";
 
     // Send next request
     *req_valid = (req_idx < n_reqs) && id_avail;
@@ -139,13 +139,14 @@ extern "C" void tick(
         *req_data = data_array[req_idx];
         *req_is_write = req_types[req_idx];
         *req_id = next_id;
-        cout << "Setting used\n";
+        //cout << "Setting used\n";
         used[next_id] = true;
+        cout << "Sending REQ " << req_idx << " --- addr=0x" << hex << addr_array[req_idx] << dec << ", data=" << data_array[req_idx] << ", write=" << req_types[req_idx] << ", id=" << next_id << "\n";
     }
 
-    cout << "req id: " << *req_id << "\n";
+    //cout << "req id: " << *req_id << "\n";
 
     *done = (resp_idx == (n_reqs - 1));
 
-    cout << "reached end\n";
+    //cout << "reached end\n";
 }
