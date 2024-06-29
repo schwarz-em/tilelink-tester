@@ -146,7 +146,7 @@ extern "C" void tick(
 
     //cout << "req id: " << *req_id << "\n";
 
-    *done = (resp_idx == (n_reqs - 1));
+    *done = (resp_idx == n_reqs);
 
     //cout << "reached end\n";
 }
