@@ -20,14 +20,8 @@ vector<uint64_t> data_array;
 
 vector<bool> used;
 
-void read_line_to_array(string line, vector<uint64_t>& arr, int n_reqs, int base){
-    string readval;
-    stringstream ss(line);
-    while (ss.good()) {
-        getline(ss, readval, ',');
-        arr.push_back(stol(readval, nullptr, base));
-    }
-    assert((arr.size()==n_reqs) && "Improper file format: num reqs does not match length");
+void read_item_to_array(string val, vector<uint64_t>& arr, int base){
+    arr.push_back(stol(val, nullptr, base));
 }
 
 extern "C" void init(int max_inflight) {
@@ -36,6 +30,7 @@ extern "C" void init(int max_inflight) {
 
     // Read in test data file
     string test_file;
+    test_file = "test_data.txt";
     s_vpi_vlog_info info;
     if (!vpi_get_vlog_info(&info))
       abort();
@@ -61,15 +56,33 @@ extern "C" void init(int max_inflight) {
 
     cout << n_reqs << "\n";
 
-    // Read in request data arrays
-    getline(f, line);
-    read_line_to_array(line, req_types, n_reqs, 10);
+    //AILSA'S EDITS BEGIN
+    for (int i =0; i < n_reqs; i++)
+    {
+        getline(f, line);
+       
+        string readval;
+        stringstream ss(line);
+        while (ss.good()) {
+            getline(ss,readval, 'v');
+            read_item_to_array(readval, req_types, 10);
+            getline(ss, readval, ',');
+            read_item_to_array(readval, addr_array, 16);
+            getline(ss, readval, ',');
+            read_item_to_array(readval, data_array, 10);
+        }
+    }
+    //AILSA'S EDITS END
+
+    // // Read in request data arrays
+    // getline(f, line);
+    // read_line_to_array(line, req_types, n_reqs, 10);
     cout << "req_types: " << req_types.size() << "\n";
-    getline(f, line);
-    read_line_to_array(line, addr_array, n_reqs, 16);
+    // getline(f, line);
+    // read_line_to_array(line, addr_array, n_reqs, 16);
     cout << "addr_array: " << addr_array.size() << "\n";
-    getline(f, line);
-    read_line_to_array(line, data_array, n_reqs, 10);
+    // getline(f, line);
+    // read_line_to_array(line, data_array, n_reqs, 10);
     cout << "data_array: " << data_array.size() << "\n";
 
     req_idx = 0;
