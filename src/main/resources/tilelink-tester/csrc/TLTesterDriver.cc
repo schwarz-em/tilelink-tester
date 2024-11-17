@@ -14,14 +14,37 @@ int resp_idx;
 int last_valid;
 
 int n_reqs;
+//AILSA'S CODE
+vector<uint64_t> all_vals;
+//AILSA'S CODE
 vector<uint64_t> req_types;
 vector<uint64_t> addr_array;
 vector<uint64_t> data_array;
 
 vector<bool> used;
 
+<<<<<<< Updated upstream
 void read_item_to_array(string val, vector<uint64_t>& arr, int base){
     arr.push_back(stol(val, nullptr, base));
+=======
+void read_line_to_array(string line, vector<uint64_t>& arr){
+    // string readval;
+    // stringstream ss(line);
+    // while (ss.good()) {
+    //     getline(ss, readval, ',');
+    //     arr.push_back(stol(readval, nullptr, base));
+    // }
+    // assert((arr.size()==n_reqs) && "Improper file format: num reqs does not match length");
+
+    std::string readval;
+    std::stringstream ss(line);
+    getline(ss, readval, ',');
+    arr.push_back(stol(readval, nullptr, 10));
+    getline(ss, readval, ',');
+    arr.push_back(stol(readval, nullptr, 16));
+    getline(ss, readval, ',');
+    arr.push_back(stol(readval, nullptr, 10));
+>>>>>>> Stashed changes
 }
 
 extern "C" void init(int max_inflight) {
@@ -56,6 +79,7 @@ extern "C" void init(int max_inflight) {
 
     cout << n_reqs << "\n";
 
+<<<<<<< Updated upstream
     //AILSA'S EDITS BEGIN
     for (int i =0; i < n_reqs; i++)
     {
@@ -84,10 +108,52 @@ extern "C" void init(int max_inflight) {
     // getline(f, line);
     // read_line_to_array(line, data_array, n_reqs, 10);
     cout << "data_array: " << data_array.size() << "\n";
+=======
+    // Read in request data arrays
+   // getline(f, line);
+    // read_line_to_array(line, req_types, n_reqs, 10);
+    // cout << "req_types: " << req_types.size() << "\n";
+    // getline(f, line);
+    // read_line_to_array(line, addr_array, n_reqs, 16);
+    // cout << "addr_array: " << addr_array.size() << "\n";
+    // getline(f, line);
+    // read_line_to_array(line, data_array, n_reqs, 10);
+    // cout << "data_array: " << data_array.size() << "\n";
+
+    //AILSA'S CODE
+    all_vals.reserve(n_reqs*3);
+
+    for (int i =0; i < n_reqs; i++)
+    {   
+        cout << i;
+        getline(f, line);
+        cout << line << "\n";
+
+        std::string readval;
+        std::stringstream ss(line);
+        getline(ss, readval, ',');
+        all_vals.push_back(stol(readval, nullptr, 10));
+        getline(ss, readval, ',');
+        all_vals.push_back(stol(readval, nullptr, 16));
+        getline(ss, readval, ',');
+        all_vals.push_back(stol(readval, nullptr, 10));
+
+        //read_line_to_array(line, all_vals);
+    }
+
+    cout << "\n BREAK - NOW READING OUT ALL_VALS \n";
+
+    int k = all_vals.size();
+    for (int i = 0; i < k; i++) {
+        cout << all_vals[i] << "\n";
+    }
+    //AILSA'S CODE
+>>>>>>> Stashed changes
 
     req_idx = 0;
     resp_idx = 0;
     last_valid = 0;
+
     for (int i=0; i<max_inflight; i++) {
         used.push_back(false);
     }
@@ -125,12 +191,12 @@ extern "C" void tick(
     assert((resp_idx <= req_idx) && "More responses seen than requests");
 
     if (resp_valid) {
-        cout << "Recieved RESP " << resp_idx << " --- data=" << resp_data << ", id=" << resp_id << ", write=" << req_types[resp_idx] << "\n";
+        cout << "Recieved RESP " << resp_idx << " --- data=" << resp_data << ", id=" << resp_id << ", write=" << all_vals[req_idx*3] << "\n";
         // cout << "resp_valid: " << resp_valid << "\n";
         // bool check = resp_valid == 0;
         // cout << "resp_valid==0: " << check << "\n";
-        if (!req_types[resp_idx]) { //If outstanding request was a read 
-            assert((resp_data == data_array[resp_idx]) && "Response data does not match request");
+        if (!all_vals[resp_idx*3]) { //If outstanding request was a read 
+            assert((resp_data == all_vals[resp_idx*3+2]) && "Response data does not match request");
         }
         resp_idx = resp_idx + 1;
         used[resp_id] = false;
@@ -148,13 +214,13 @@ extern "C" void tick(
     *req_valid = (req_idx < n_reqs) && id_avail;
     last_valid = *req_valid;
     if (*req_valid) {
-        *req_addr = addr_array[req_idx];
-        *req_data = data_array[req_idx];
-        *req_is_write = req_types[req_idx];
+        *req_addr = all_vals[req_idx*3+1];
+        *req_data = all_vals[req_idx*3+2];
+        *req_is_write = all_vals[req_idx*3];
         *req_id = next_id;
         //cout << "Setting used\n";
         used[next_id] = true;
-        cout << "Sending REQ " << req_idx << " --- addr=0x" << hex << addr_array[req_idx] << dec << ", data=" << data_array[req_idx] << ", write=" << req_types[req_idx] << ", id=" << next_id << "\n";
+        cout << "Sending REQ " << req_idx << " --- addr=0x" << hex << all_vals[req_idx*3+1] << dec << ", data=" << all_vals[req_idx*3+2] << ", write=" << all_vals[req_idx*3] << ", id=" << next_id << "\n";
     }
 
     //cout << "req id: " << *req_id << "\n";
