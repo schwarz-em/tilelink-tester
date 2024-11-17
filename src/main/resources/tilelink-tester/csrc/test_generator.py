@@ -3,7 +3,9 @@ import random
 def main():  
     filename = input("Enter the desired file name: ")
     # Ex with 20 test cases
-    generate_serial_test(filename, 20)
+    number = int(input("Enter the desired # of tests: "))
+    filename = "test_files/" + filename
+    generate_serial_test(filename, number)
 
 def generate_serial_test(filename, num_tests):
     #A function that generates random values - writes and then reads
