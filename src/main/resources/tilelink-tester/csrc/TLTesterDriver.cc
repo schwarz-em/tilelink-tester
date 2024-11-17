@@ -23,30 +23,6 @@ vector<uint64_t> data_array;
 
 vector<bool> used;
 
-<<<<<<< Updated upstream
-void read_item_to_array(string val, vector<uint64_t>& arr, int base){
-    arr.push_back(stol(val, nullptr, base));
-=======
-void read_line_to_array(string line, vector<uint64_t>& arr){
-    // string readval;
-    // stringstream ss(line);
-    // while (ss.good()) {
-    //     getline(ss, readval, ',');
-    //     arr.push_back(stol(readval, nullptr, base));
-    // }
-    // assert((arr.size()==n_reqs) && "Improper file format: num reqs does not match length");
-
-    std::string readval;
-    std::stringstream ss(line);
-    getline(ss, readval, ',');
-    arr.push_back(stol(readval, nullptr, 10));
-    getline(ss, readval, ',');
-    arr.push_back(stol(readval, nullptr, 16));
-    getline(ss, readval, ',');
-    arr.push_back(stol(readval, nullptr, 10));
->>>>>>> Stashed changes
-}
-
 extern "C" void init(int max_inflight) {
 
     printf("begin init\n");
@@ -79,56 +55,12 @@ extern "C" void init(int max_inflight) {
 
     cout << n_reqs << "\n";
 
-<<<<<<< Updated upstream
-    //AILSA'S EDITS BEGIN
-    for (int i =0; i < n_reqs; i++)
-    {
-        getline(f, line);
-       
-        string readval;
-        stringstream ss(line);
-        while (ss.good()) {
-            getline(ss,readval, 'v');
-            read_item_to_array(readval, req_types, 10);
-            getline(ss, readval, ',');
-            read_item_to_array(readval, addr_array, 16);
-            getline(ss, readval, ',');
-            read_item_to_array(readval, data_array, 10);
-        }
-    }
-    //AILSA'S EDITS END
-
-    // // Read in request data arrays
-    // getline(f, line);
-    // read_line_to_array(line, req_types, n_reqs, 10);
-    cout << "req_types: " << req_types.size() << "\n";
-    // getline(f, line);
-    // read_line_to_array(line, addr_array, n_reqs, 16);
-    cout << "addr_array: " << addr_array.size() << "\n";
-    // getline(f, line);
-    // read_line_to_array(line, data_array, n_reqs, 10);
-    cout << "data_array: " << data_array.size() << "\n";
-=======
-    // Read in request data arrays
-   // getline(f, line);
-    // read_line_to_array(line, req_types, n_reqs, 10);
-    // cout << "req_types: " << req_types.size() << "\n";
-    // getline(f, line);
-    // read_line_to_array(line, addr_array, n_reqs, 16);
-    // cout << "addr_array: " << addr_array.size() << "\n";
-    // getline(f, line);
-    // read_line_to_array(line, data_array, n_reqs, 10);
-    // cout << "data_array: " << data_array.size() << "\n";
-
     //AILSA'S CODE
     all_vals.reserve(n_reqs*3);
 
     for (int i =0; i < n_reqs; i++)
     {   
-        cout << i;
         getline(f, line);
-        cout << line << "\n";
-
         std::string readval;
         std::stringstream ss(line);
         getline(ss, readval, ',');
@@ -137,18 +69,8 @@ extern "C" void init(int max_inflight) {
         all_vals.push_back(stol(readval, nullptr, 16));
         getline(ss, readval, ',');
         all_vals.push_back(stol(readval, nullptr, 10));
-
-        //read_line_to_array(line, all_vals);
-    }
-
-    cout << "\n BREAK - NOW READING OUT ALL_VALS \n";
-
-    int k = all_vals.size();
-    for (int i = 0; i < k; i++) {
-        cout << all_vals[i] << "\n";
     }
     //AILSA'S CODE
->>>>>>> Stashed changes
 
     req_idx = 0;
     resp_idx = 0;
