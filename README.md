@@ -18,10 +18,10 @@ Each request must be formatted as follows:
 [1 if write, 0 if read operation], 0x[address in hex], [write value if write operation, expected value if read]
 
 **EXAMPLE: (this is a test file with 4 operations)**
-4
-1, 0x100000100, 59
-1, 0x100000100, 82
-0, 0x100000100, 59
-0, 0x100000100, 82
+4<br>
+1, 0x100000100, 59<br>
+1, 0x100000100, 82<br>
+0, 0x100000100, 59<br>
+0, 0x100000100, 82<br>
 
 
