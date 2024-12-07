@@ -18,7 +18,7 @@ def main():
 
     if testtype =='random':
         random_test(filename, number)
-    elif testtype == 'single_address':
+    elif testtype == 'single address':
         single_addr_test(filename, number)
 
 def single_addr_test(filename,num_tests):
@@ -29,8 +29,10 @@ def single_addr_test(filename,num_tests):
         response_req = [1] * (num_tests // 2) + [0] * (num_tests // 2)
         hex_addresses = [f"0x{address:X}" for i in range(num_tests//2)]
         decimal_outputs = [random.randint(1,100) for i in range(num_tests//2)]  
-        for i in range (num_tests//2):
-            f.write(", ".join(['1',str(hex_addresses[i]),str(decimal_outputs[i])]) + "\n")
+        for i in range (num_tests // 2):
+            f.write(", ".join(['1',str(hex_addresses[i]),str(decimal_outputs[i])]))
+            f.write("\n")
+        for i in range (num_tests // 2):
             f.write(", ".join(['0',str(hex_addresses[i]),str(decimal_outputs[i])]))
             f.write("\n")
 

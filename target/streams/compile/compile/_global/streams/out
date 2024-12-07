@@ -1,0 +1,23 @@
+[0m[[0m[33mwarn[0m] [0m[0m/scratch/asun/chipyard/tools/tilelink-tester/src/main/scala/Harness.scala:18:51: type LazyModule in package diplomacy is deprecated (since rocketchip 2.0.0): Diplomacy has been split to a standalone library[0m
+[0m[[0m[33mwarn[0m] [0m[0mclass TesterDebug(implicit p: Parameters) extends LazyModule {[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                                  ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/scratch/asun/chipyard/tools/tilelink-tester/src/main/scala/Harness.scala:21:18: value LazyModule in package diplomacy is deprecated (since rocketchip 2.0.0): Diplomacy has been split to a standalone library[0m
+[0m[[0m[33mwarn[0m] [0m[0m  val tltester = LazyModule(new TileLinkTester)[0m
+[0m[[0m[33mwarn[0m] [0m[0m                 ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/scratch/asun/chipyard/tools/tilelink-tester/src/main/scala/Harness.scala:23:13: value LazyModule in package diplomacy is deprecated (since rocketchip 2.0.0): Diplomacy has been split to a standalone library[0m
+[0m[[0m[33mwarn[0m] [0m[0m  val mem = LazyModule(new TLRAM(AddressSet(BigInt(0x100000000L), BigInt(0x0FFFFL))))[0m
+[0m[[0m[33mwarn[0m] [0m[0m            ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/scratch/asun/chipyard/tools/tilelink-tester/src/main/scala/Harness.scala:28:22: type LazyModuleImp in package diplomacy is deprecated (since rocketchip 2.0.0): Diplomacy has been split to a standalone library[0m
+[0m[[0m[33mwarn[0m] [0m[0m  class Impl extends LazyModuleImp(this) {[0m
+[0m[[0m[33mwarn[0m] [0m[0m                     ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/scratch/asun/chipyard/tools/tilelink-tester/src/main/scala/Harness.scala:44:23: value LazyModule in package diplomacy is deprecated (since rocketchip 2.0.0): Diplomacy has been split to a standalone library[0m
+[0m[[0m[33mwarn[0m] [0m[0m  val tester = Module(LazyModule(new TesterDebug).module)[0m
+[0m[[0m[33mwarn[0m] [0m[0m                      ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/scratch/asun/chipyard/tools/tilelink-tester/src/main/scala/Tester.scala:46:54: type LazyModule in package diplomacy is deprecated (since rocketchip 2.0.0): Diplomacy has been split to a standalone library[0m
+[0m[[0m[33mwarn[0m] [0m[0mclass TileLinkTester(implicit p: Parameters) extends LazyModule with HasTesterParams {[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                                     ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/scratch/asun/chipyard/tools/tilelink-tester/src/main/scala/Tester.scala:56:22: type LazyModuleImp in package diplomacy is deprecated (since rocketchip 2.0.0): Diplomacy has been split to a standalone library[0m
+[0m[[0m[33mwarn[0m] [0m[0m  class Impl extends LazyModuleImp(this) {[0m
+[0m[[0m[33mwarn[0m] [0m[0m                     ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m7 feature warnings; re-run with -feature for details[0m
+[0m[[0m[33mwarn[0m] [0m[0m8 warnings found[0m
