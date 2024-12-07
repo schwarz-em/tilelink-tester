@@ -24,4 +24,12 @@ Each request must be formatted as follows:
 0, 0x100000100, 59<br>
 0, 0x100000100, 82<br>
 
+## How to generate tests
 
+Right now, the python generator supports two kinds of tests - repeatedly writing to a random address,
+or random tests that increase in succession
+
+__Here's how to use the CLI:__<br>
+python test_generator.py [name of file] [number of tests] {OPTIONAL: --type ['single_address' or 'random']}
+
+if you don't specify a type, it will default to random
