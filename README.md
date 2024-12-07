@@ -13,6 +13,7 @@ make MODEL=TLTestHarness MODEL_PACKAGE=ddr CONFIG=DDRTLTConfig CONFIG_PACKAGE=dd
 ## All dataset files ought to be configured as follows:
 
 Line 1: The number of requests being made
+
 Each request must be formatted as follows:
 [1 if write, 0 if read operation], 0x[address in hex], [write value if write operation, expected value if read]
 
