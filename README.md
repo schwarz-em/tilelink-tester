@@ -33,3 +33,12 @@ __Here's how to use the CLI:__<br>
 python test_generator.py [name of file] [number of tests] {OPTIONAL: --type ['single_address' or 'random']}
 
 if you don't specify a type, it will default to random
+
+
+__DEFAULT LPDDR PARAMETERS:__<br>
+DEBUG = false, IDBITS = 10, ROWBITS = 18,  COLBITS = 8, 
+TIMEBITS = 6, RWTIMERBITS = 10, TFAWBITS = 30, BANKBITSTART = 5,
+RANKS = 1, BANKS = 8, BURSTLENGTH = 16, DQWIDTH = 16,
+BANKDEPTH = 6, QUEUEDEPTH = 256, WRQDEPTH = 256, RDQDEPTH = 256, 
+DFIAWIDTH = 6, DFIPHASES = 4, DFIDQMULTIPLE = 4, PHYDQLANESYNC = 3,
+PHYOUTPUTRATE = 2, PHYRCVRATE = 2, TLDATAWIDTH = 256
