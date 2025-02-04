@@ -4,6 +4,8 @@ from pathlib import Path
 import subprocess
 import os
 import sys
+import datetime
+
 
 #EDIT THIS IF YOU WANT TO EDIT YOUR MAKE COMMAND
 make_command = r'''make MODEL=TLTestHarness MODEL_PACKAGE=ddr CONFIG=DDRTLTConfig CONFIG_PACKAGE=ddr BINARY=$RISCV/riscv64-unknown-elf/share/riscv-tests/isa/rv64ui-p-simple run-binary TOP=TLDDRTester CLOCK_PERIOD=5.0 EXTRA_SIM_FLAGS='+tltestfile=[FILEPATH]' > [COUNTER]'''
@@ -13,12 +15,18 @@ sims_directory = "/scratch/asun/chipyard/sims/vcs"
 parser = argparse.ArgumentParser()
 parser.add_argument('file_name', help="File Name")
 parser.add_argument('-num_reqs', type=int, help="Number of requests per test", default = 0)
-parser.add_argument('-type', type=str, help="Type of Test", default='random')
+parser.add_argument('-type', type=str, help="Type of Test", default='seq_random')
 parser.add_argument('-num_tests', type = int, help = "number of tests", default = 1)
 parser.add_argument('--run', action='store_true' , help = "run or just generate tests" )
+parser.add_argument('-stride', type = int, help = "stride distance", default = 256)
 
 args = parser.parse_args()
 
+"""
+TODO: 
+2. Write the Out Files So that the Out Files are Writing Useful Information
+3. Blah Blah Blah
+"""
 """
 example: python test_generator.py random_10_test1 10 random
 """
@@ -43,10 +51,12 @@ def main():
             filename = (folder_path + "/%s_%s" % (args.file_name, i))
             f = open(filename,'w')
 
-            if testtype =='random':
-                random_test(f, number)
+            if testtype =='seq_random':
+                seq_random_test(f, number)
             elif testtype == 'single_address':
                 single_addr_test(f, number)
+            elif testtype == 'strided_random':
+                strided_random_test(f, number, args.stride)
             f.close()
     else:
         folder_path = ("%s" % args.file_name)
@@ -62,9 +72,16 @@ def run_folder(folder_path):
         print("Error: Check the path to your directory")
 
     files = source_dir.iterdir()
+
+    #Captures the current time of testing and dumps all log files into this directory
+    datetime_str = str(datetime.datetime.now()).replace(" ", "")
+    log_file_directory = sims_directory + "/" + datetime_str
+    create_folder(sims_directory + "/" + datetime_str)
+
     for f in files:
+        print(f)
         counter = counter + 1
-        final_command = (make_command.replace("[FILEPATH]", str(f))).replace("[COUNTER]", "test_" + str(counter))
+        final_command = (make_command.replace("[FILEPATH]", str(f))).replace("[COUNTER]", datetime_str +"/test_" + str(counter))
         status = subprocess.run(final_command, cwd=sims_directory, text = True, capture_output=True, shell=True)
         print("Return code_" + str(counter), status.returncode)
         print("\n")
@@ -82,12 +99,27 @@ def single_addr_test(f,num_reqs):
         f.write(", ".join(['0',str(hex_addresses[i]),str(decimal_outputs[i])]))
         f.write("\n")
 
-def random_test(f, num_reqs):
-    #A function that generates random values - writes and then reads
+def strided_random_test(f, num_reqs,stride):
+    #generates random values - writes and then reads
     num_reqs = num_reqs * 2
     f.write(f"{num_reqs}\n")  
     response_req = [1] * (num_reqs // 2) + [0] * (num_reqs // 2)
-    hex_addresses = [f"0x{(0x100000000 + 0x1000 * i):X}" for i in range(1,9)] * (num_reqs*9//2)
+    hex_addresses = [f"0x{(0x100000000 + stride * i):X}" for i in range(1,num_reqs)] * (num_reqs*9//2)
+    decimal_outputs = [random.randint(1,100) for i in range(num_reqs//2)]  
+    for i in range (num_reqs // 2):
+        f.write(", ".join(['1',str(hex_addresses[i]),str(decimal_outputs[i])]))
+        f.write("\n")
+    for i in range (num_reqs // 2):
+        f.write(", ".join(['0',str(hex_addresses[i]),str(decimal_outputs[i])]))
+        f.write("\n")
+
+
+def seq_random_test(f, num_reqs):
+    #generates random values - writes and then reads
+    num_reqs = num_reqs * 2
+    f.write(f"{num_reqs}\n")  
+    response_req = [1] * (num_reqs // 2) + [0] * (num_reqs // 2)
+    hex_addresses = [f"0x{(0x100000000 + 0x1000 * i):X}" for i in range(1,num_reqs)] * (num_reqs*9//2)
     decimal_outputs = [random.randint(1,100) for i in range(num_reqs//2)]  
     for i in range (num_reqs // 2):
         f.write(", ".join(['1',str(hex_addresses[i]),str(decimal_outputs[i])]))
@@ -97,10 +129,10 @@ def random_test(f, num_reqs):
         f.write("\n")
 
 def create_folder(folder_path):
-    if not os.path.exists(os.getcwd() + folder_path):
-        print("made")
-        os.makedirs(os.getcwd() + folder_path)
-    else:
-        print("pass")
+    print("creating folder at")
+    print(folder_path)
+    try:
+        os.makedirs(folder_path)
+    except:
         pass
 main()
