@@ -15,12 +15,10 @@ sims_directory = "/scratch/asun/chipyard/sims/vcs"
 parser = argparse.ArgumentParser()
 parser.add_argument('file_name', help="File Name")
 parser.add_argument('-num_reqs', type=int, help="Number of requests per test", default = 0)
-parser.add_argument('-type', type=str, help="Type of Test", default='seq_random')
+parser.add_argument('-type', type=str, help="Type of Test", default='strided_random')
 parser.add_argument('-num_tests', type = int, help = "number of tests", default = 1)
 parser.add_argument('--run', action='store_true' , help = "run or just generate tests" )
 parser.add_argument('-stride', type = int, help = "stride distance", default = 256)
-
-args = parser.parse_args()
 
 """
 TODO: 
@@ -31,36 +29,22 @@ TODO:
 example: python test_generator.py random_10_test1 10 random
 """
 
-def main():  
-    # If --option is not selected, we force the user to provide arg1 and arg2
-    if not args.run:
-        if not args.num_reqs or not args.num_tests or not args.type:
-            print("Error: You are generating test files. Test name, Type and # of requests must be specified.")
-            sys.exit(1)  
-        else:
-            print("Generating Test Files...")
-
-    number = args.num_reqs
-
-    testtype = args.type
-    folder_path = ("test_files/%s_%d_%s" % (args.type, args.num_reqs, args.file_name))
+def generate(folder_path, num_tests, file_name, test_type, num_reqs, stride):
     create_folder(folder_path)
+    for i in range (0, num_tests):
+        filename = (folder_path + "/%s_%s_%s_%s_%s" % (file_name, i,test_type,num_reqs,stride))
+        f = open(filename,'w')
+            
+        if test_type == 'single_address':
+            single_addr_test(f, num_reqs)
+        elif test_type == 'strided_random':
+            strided_random_test(f, num_reqs, stride)
+        elif test_type == 'interleaved':
+            interleaved_test(f, num_reqs, stride)
+        elif test_type == 'preload_random':
+            preload_random_test(f,num_reqs,stride)
+        f.close()
 
-    if not (args.run):
-        for i in range (0, args.num_tests):
-            filename = (folder_path + "/%s_%s" % (args.file_name, i))
-            f = open(filename,'w')
-
-            if testtype =='seq_random':
-                seq_random_test(f, number)
-            elif testtype == 'single_address':
-                single_addr_test(f, number)
-            elif testtype == 'strided_random':
-                strided_random_test(f, number, args.stride)
-            f.close()
-    else:
-        folder_path = ("%s" % args.file_name)
-        run_folder(folder_path)
             
 def run_folder(folder_path):
     source_dir = None
@@ -112,21 +96,40 @@ def strided_random_test(f, num_reqs,stride):
     for i in range (num_reqs // 2):
         f.write(", ".join(['0',str(hex_addresses[i]),str(decimal_outputs[i])]))
         f.write("\n")
+    
+def preload_random_test(f,num_reqs,stride):
+    write_requests = [(f"0x{(0x100000000 + stride *i):X}", random.randint(1,100)) for i in range(num_reqs)]
+    read_number = random.randint(0,num_reqs)
+    read_requests = {}
+    f.write(f"{num_reqs + read_number}\n")  
+    for i in range(len(write_requests)):
+        read_requests[write_requests[i][0]] = write_requests[i][1]
+        f.write(", ".join(['1',str(write_requests[i][0]),str(write_requests[i][1])]))
+        f.write("\n")
+    for j in range(read_number):
+        random_key = random.choice(list(read_requests.keys()))
+        f.write(", ".join(['0',str(random_key),str(read_requests.get(random_key))]))
+        f.write("\n")
 
-
-def seq_random_test(f, num_reqs):
-    #generates random values - writes and then reads
-    num_reqs = num_reqs * 2
+def interleaved_test(f, num_reqs,stride):
     f.write(f"{num_reqs}\n")  
-    response_req = [1] * (num_reqs // 2) + [0] * (num_reqs // 2)
-    hex_addresses = [f"0x{(0x100000000 + 0x1000 * i):X}" for i in range(1,num_reqs)] * (num_reqs*9//2)
-    decimal_outputs = [random.randint(1,100) for i in range(num_reqs//2)]  
-    for i in range (num_reqs // 2):
-        f.write(", ".join(['1',str(hex_addresses[i]),str(decimal_outputs[i])]))
-        f.write("\n")
-    for i in range (num_reqs // 2):
-        f.write(", ".join(['0',str(hex_addresses[i]),str(decimal_outputs[i])]))
-        f.write("\n")
+    #random list of addresses, data pairs
+    write_requests = [(f"0x{(0x100000000 + stride * random.randint(0,num_reqs)):X}", random.randint(1,100)) for i in range(num_reqs)]
+    read_requests = {}
+    #for loop, random request
+    for i in range(int(num_reqs/2)):
+        if ((not random.randint(0,1))and len(read_requests)>0):
+            for k in range (2):
+                random_key = random.choice(list(read_requests.keys()))
+                f.write(", ".join(['0',str(random_key),str(read_requests.get(random_key))]))
+                f.write("\n")
+        else:
+            for k in range (2):
+                index_write = random.randint(0,len(write_requests) - 1)
+                f.write(", ".join(['1',str(write_requests[index_write][0]),str(write_requests[index_write][1])]))
+                f.write("\n")
+                read_requests[write_requests[index_write][0]] = write_requests[index_write][1]
+                write_requests.pop(index_write)
 
 def create_folder(folder_path):
     print("creating folder at")
@@ -135,4 +138,24 @@ def create_folder(folder_path):
         os.makedirs(folder_path)
     except:
         pass
-main()
+
+if __name__ == "__main__":
+    args = parser.parse_args()
+
+    print("Running Main Function")
+    # If --option is not selected, we force the user to provide arg1 and arg2
+    if not args.num_reqs or not args.num_tests or not args.type:
+        print("Error: You are generating test files. Test name, Type and # of requests must be specified.")
+        sys.exit(1)  
+    else:
+        print("Generating Test Files...")
+
+    req_number = args.num_reqs
+    test_type = args.type
+    test_name = args.file_name
+    test_number = args.num_tests
+    stride = args.stride
+
+    folder_path = ("test_files/%s_%d_%s" % (test_type, test_number, test_name))
+    generate(folder_path, test_number, test_name, test_type,req_number, stride)
+

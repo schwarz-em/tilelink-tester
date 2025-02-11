@@ -5,11 +5,15 @@ import subprocess
 import os
 import sys
 import datetime
-
+import csv
+import test_generator
 
 parser = argparse.ArgumentParser()
 parser.add_argument('file_name', help="File Name")
-args = parser.parse_args()
+parser.add_argument('-c', '--csv', action = "store_true", help = "Flag to convert to CSV", default = False)
+parser.add_argument('-v', '--validate', action = "store_true", help = "Flag to Validate a set of Test Files", default = False)
+parser.add_argument('-dir_name', action = "store_true", help = "Wee", default = "" )
+parser.add_argument('-r', action = "store_true", help = "Flag", default = False )
 
 
 #EDIT THIS IF YOU WANT TO EDIT YOUR MAKE COMMAND
@@ -21,7 +25,7 @@ out_directory = "/scratch/asun/chipyard/sims/vcs/output/ddr.TLTestHarness.DDRTLT
 # EDIT THIS WITH THE LIST OF TESTS YOU WANT TO RUN
 #test_list = [avg_cycle_time]
 
-def run_folder(folder_path):
+def run_folder(folder_path, name):
     source_dir = None
     counter = 0
     
@@ -30,22 +34,31 @@ def run_folder(folder_path):
     except:
         print("Error: Check the path to your directory")
 
-    files = source_dir.iterdir()
 
-    #Captures the current time of testing and dumps all log files into this directory
-    datetime_str = str(datetime.datetime.now()).replace(" ", "")
-    log_file_directory = (sims_directory + "/" + datetime_str)
-    create_folder(sims_directory + "/" + datetime_str)
+    if name == '':
+        #Captures the current time of testing and dumps all log files into this directory
+        datetime_str = str(datetime.datetime.now()).replace(" ", "")
+        log_file_directory = (sims_directory + "/" + datetime_str)
+    else:
+        log_file_directory = (sims_directory + "/" + name)
+    create_folder(log_file_directory)
 
-    for f in files:
-        print(f)
-        counter = counter + 1
-        final_command = (make_command.replace("[FILEPATH]", str(f))).replace("[COUNTER]", datetime_str +"/test_" + str(counter))
-        scrape_data(sims_directory + "/" + datetime_str + "/" + "Output", counter)
-        status = subprocess.run(final_command, cwd=sims_directory, text = True, capture_output=True, shell=True)
-        print("Return code_" + str(counter), status.returncode)
-        print("\n")
-        print("Output_" + str(counter), status.stdout)
+    dump_path = sims_directory + "/" + datetime_str + "/" + "Output"
+
+    #can handle nested folders
+    root_dir = Path(source_dir)
+    for file_path in root_dir.rglob("*"):  
+       if file_path.is_file():  
+            print(file_path)
+            counter = counter + 1
+            final_command = (make_command.replace("[FILEPATH]", str(file_path))).replace("[COUNTER]", datetime_str +"/test_" + str(counter))
+            status = subprocess.run(final_command, cwd=sims_directory, text = True, capture_output=True, shell=True)
+            scrape_data(dump_path, counter)
+            print("Return code_" + str(counter), status.returncode)
+            print("\n")
+            print("Output_" + str(counter), status.stdout)
+    
+    return log_file_directory
     
 def scrape_data(dump_path, test_num):
     print("Scraping Data from .Out File")
@@ -60,12 +73,82 @@ def scrape_data(dump_path, test_num):
         dump_file.write("\n\n\n")
         dump_file.flush()
 
-def find_instances(dump_path, parameter_name):
-    with open(dump_path, 'r') as dump_file:
-        pattern = fr"{parameter_name} (\d+)"
-        matches = re.findall(pattern, dump_file.read())
-        numbers = [int(match) for match in matches]    
-    return (numbers)
+def only_numerics(seq):
+    return list(filter(type(seq).isdigit, seq))
+
+def validate_tests(file_path):
+    addresses = {}
+    counter = 0
+    with open (file_path, 'r') as test_file:
+        for row in test_file:
+            if (counter == 0) : 
+                counter += 1
+                continue
+            request = (row.replace(" ","")).split(',')
+
+            if (int(request[0])):
+                addresses[request[1]] = request[2]
+            elif (request[2] != addresses.get(request[1])):
+                print(f"ERROR AT LINE {counter}")
+                print(f" REQUESTED {request[2]} at {request[0]} but got {addresses.get(request[1])}")
+            counter += 1
+
+def find_instances(dump_path):
+    #file reading
+    source_dir = None
+    
+    try:
+        source_dir = Path(dump_path)
+    except:
+        print("Check your Path")
+    
+    out_file_iter = source_dir.iterdir()
+
+    #set the directory for the output
+    csv_path_out = dump_path
+    #set directory for output file
+    f = dump_path + "/" + "Output"
+
+    #identify test number
+    test_id = str(f).rsplit("/", 1) [1]
+    #create a new csv
+    csv_file_path = dump_path + "/" + test_id + ".csv"
+    #iterate over each line
+    outfile = open(f,'r')
+    csvfile = open(csv_file_path, 'w')
+
+    lines = outfile.readlines()
+    split_list = [item.split(" ") for item in lines]
+    cleaned_list = [[y for y in x if y != ''] for x in split_list if ">" in x or "PASSED" in x]
+
+    #iterate over each list, find each indices of >, find the one before
+    fields = []
+    rows = []
+    for row in cleaned_list:
+        inner_row = []
+
+        if ("PASSED" in row):
+            inner_row.extend([0]*len(fields))
+            inner_row.append(row[5])
+        else:
+            indices = [i for i in range(len(row)) if row[i] == '>']
+            for index in indices:
+                if(type(row[index-1]).isdigit) and row[index-1] not in fields[:index]:
+                    fields.append(row[index-1])
+                inner_row.append(row[index+1])
+        rows.append(inner_row)
+    
+    fields.append("Total Cycle Time")
+
+    # creating a csv writer object
+    csvwriter = csv.writer(csvfile)
+    # writing the fields
+    csvwriter.writerow(fields)
+    # writing the data rows
+    csvwriter.writerows(rows)
+    outfile.close()
+    csvfile.close()
+    return 
 
 def avg_cycle_time(dump_path):
     cycle_times = find_instances(dump_path, "TEST TOTAL CYCLE TIME")
@@ -78,10 +161,35 @@ def create_folder(folder_path):
         os.makedirs(folder_path)
     except:
         pass
+
+def run_diagnostics(file_name, dir_name):
+    test_number = 5
+    folder_path = str(Path.cwd()) + "/test_files/" + "Regression_Test_" + str(file_name)
+    create_folder(folder_path)
+    tests = ["single_address", "strided_random", "interleaved", "preload_random"]
+
+    for test in tests:
+        for stride in range(2,5):
+            for request_factor in range (1,5):
+                test_generator.generate(folder_path, test_number, "Regression", test, request_factor * 100, 16**stride)
     
-def main():  
+    print(folder_path)
+    #fix the run folder so that it can run nested folders as well
+    run_folder(folder_path,dir_name)
+
+    return
+
+def main():
+    args = parser.parse_args()
     folder_path = ("%s" % args.file_name)
-    run_folder(folder_path)
+    if (args.csv):
+        find_instances(folder_path)
+    elif (args.validate):
+        validate_tests(folder_path)
+    elif (args.r):
+        run_diagnostics(args.file_name, args.dir_name)
+    else:
+        run_folder(folder_path, args.dir_name)
 
 if __name__ == "__main__":
     main()
