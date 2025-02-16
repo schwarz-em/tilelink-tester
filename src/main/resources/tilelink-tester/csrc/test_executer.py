@@ -12,7 +12,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('file_name', help="File Name")
 parser.add_argument('-c', '--csv', action = "store_true", help = "Flag to convert to CSV", default = False)
 parser.add_argument('-v', '--validate', action = "store_true", help = "Flag to Validate a set of Test Files", default = False)
-parser.add_argument('-dir_name', action = "store_true", help = "Wee", default = "" )
+parser.add_argument('-dir_name', action = "store", help = "Wee", default = "" )
 parser.add_argument('-r', action = "store_true", help = "Flag", default = False )
 
 
@@ -29,34 +29,37 @@ def run_folder(folder_path, name):
     source_dir = None
     counter = 0
     
+    print("\n TEST FOLDER PATH: ", folder_path)
     try:
         source_dir = Path(folder_path)
     except:
         print("Error: Check the path to your directory")
-
-
+    directory_name = name
+    datetime_str = str(datetime.datetime.now()).replace(" ", "")
     if name == '':
+        directory_name = datetime_str
         #Captures the current time of testing and dumps all log files into this directory
-        datetime_str = str(datetime.datetime.now()).replace(" ", "")
-        log_file_directory = (sims_directory + "/" + datetime_str)
-    else:
-        log_file_directory = (sims_directory + "/" + name)
-    create_folder(log_file_directory)
+    log_file_directory = (sims_directory + "/" + directory_name)
 
-    dump_path = sims_directory + "/" + datetime_str + "/" + "Output"
+    create_folder(log_file_directory)
+    dump_path = log_file_directory + "/" + "Output"
 
     #can handle nested folders
     root_dir = Path(source_dir)
     for file_path in root_dir.rglob("*"):  
        if file_path.is_file():  
-            print(file_path)
             counter = counter + 1
-            final_command = (make_command.replace("[FILEPATH]", str(file_path))).replace("[COUNTER]", datetime_str +"/test_" + str(counter))
+            file_name = directory_name +"/" + (str(file_path).split("/"))[-1]
+            final_command = (make_command.replace("[FILEPATH]", str(file_path))).replace("[COUNTER]", (file_name))
+            print("\n RUNNING COMMAND...",final_command)
             status = subprocess.run(final_command, cwd=sims_directory, text = True, capture_output=True, shell=True)
+            
             scrape_data(dump_path, counter)
             print("Return code_" + str(counter), status.returncode)
             print("\n")
             print("Output_" + str(counter), status.stdout)
+
+    scrape_diagnostics(log_file_directory)
     
     return log_file_directory
     
@@ -155,15 +158,56 @@ def avg_cycle_time(dump_path):
     return (sum(cycle_times) / len(cycle_times))
 
 def create_folder(folder_path):
-    print("creating folder at")
-    print(folder_path)
+    print("\n CREATING FOLDER AT...", folder_path)
     try:
         os.makedirs(folder_path)
     except:
         pass
 
+
+def scrape_diagnostics(folder_path):
+    cols = ["Test Name", "Pass/Fail", "Error", "Total Cycle Time"]
+    rows = []
+
+    try:
+        source_dir = Path(folder_path)
+    except:
+        print("Error: Check the path to your directory")
+
+    #can handle nested folders
+    root_dir = Path(source_dir)
+    for file_path in root_dir.rglob("*"):  
+        test_name_temp = ""
+        error_temp = "NA"
+        pass_temp = 0
+        total_cycle_temp = ""
+        lines = []
+        result = []
+        if file_path.is_file():
+            test_name_temp = str(file_path).split("/")[-1]
+            if (test_name_temp != "Output" and test_name_temp !="diagnostics.csv"):
+                with open (file_path, 'r') as out_file:
+                    lines = out_file.read().splitlines() # Read all lines at once
+                result = [(line.lstrip().split(maxsplit=1) + [""])[:1] for line in lines]    
+                if ['An'] in result:
+                    error_temp = (lines[result.index(['An'])])
+                elif ['Error:'] in result:
+                    error_temp =(lines[result.index(['Error:'])])
+                else:
+                    pass_temp = 1
+                rows.append([test_name_temp, str(pass_temp), error_temp, total_cycle_temp])
+    
+    csv_file_path = folder_path + "/" + "diagnostics.csv"
+    csvfile = open(csv_file_path, 'w')
+    csvwriter = csv.writer(csvfile)
+    csvwriter.writerow(cols)
+    csvwriter.writerows(rows)
+    csvfile.close()
+
+    return csv_file_path      
+
 def run_diagnostics(file_name, dir_name):
-    test_number = 5
+    test_number = 1
     folder_path = str(Path.cwd()) + "/test_files/" + "Regression_Test_" + str(file_name)
     create_folder(folder_path)
     tests = ["single_address", "strided_random", "interleaved", "preload_random"]
@@ -173,11 +217,9 @@ def run_diagnostics(file_name, dir_name):
             for request_factor in range (1,5):
                 test_generator.generate(folder_path, test_number, "Regression", test, request_factor * 100, 16**stride)
     
-    print(folder_path)
     #fix the run folder so that it can run nested folders as well
-    run_folder(folder_path,dir_name)
-
-    return
+    out_path = run_folder(folder_path,dir_name)
+    return out_path
 
 def main():
     args = parser.parse_args()
