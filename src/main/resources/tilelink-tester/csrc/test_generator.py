@@ -14,7 +14,7 @@ sims_directory = "/scratch/asun/chipyard/sims/vcs"
 
 parser = argparse.ArgumentParser()
 parser.add_argument('file_name', help="File Name")
-parser.add_argument('-num_reqs', type=int, help="Number of requests per test", default = 0)
+parser.add_argument('-num_reqs', type=int, help="Number of requests per test", default = 10)
 parser.add_argument('-type', type=str, help="Type of Test", default='strided_random')
 parser.add_argument('-num_tests', type = int, help = "number of tests", default = 1)
 parser.add_argument('--run', action='store_true' , help = "run or just generate tests" )
