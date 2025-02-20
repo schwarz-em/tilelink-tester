@@ -57,7 +57,6 @@ def run_folder(folder_path, name):
             scrape_data(dump_path, counter)
             print("Return code_" + str(counter), status.returncode)
             print("\n")
-            print("Output_" + str(counter), status.stdout)
 
     scrape_diagnostics(log_file_directory)
     
@@ -79,22 +78,33 @@ def scrape_data(dump_path, test_num):
 def only_numerics(seq):
     return list(filter(type(seq).isdigit, seq))
 
-def validate_tests(file_path):
+def validate_tests(folder_path):
     addresses = {}
     counter = 0
-    with open (file_path, 'r') as test_file:
-        for row in test_file:
-            if (counter == 0) : 
-                counter += 1
-                continue
-            request = (row.replace(" ","")).split(',')
 
-            if (int(request[0])):
-                addresses[request[1]] = request[2]
-            elif (request[2] != addresses.get(request[1])):
-                print(f"ERROR AT LINE {counter}")
-                print(f" REQUESTED {request[2]} at {request[0]} but got {addresses.get(request[1])}")
-            counter += 1
+    try:
+        source_dir = Path(folder_path)
+    except:
+        print("Error: Check the path to your directory")
+
+    root_dir = Path(source_dir)
+    for file_path in root_dir.rglob("*"): 
+        counter = 0 
+        if file_path.is_file():
+            with open (file_path, 'r') as test_file:
+                for row in test_file:
+                    if (counter == 0) : 
+                        counter += 1
+                        continue
+                    request = (row.replace(" ","")).split(',')
+
+                    if (int(request[0])):
+                        addresses[request[1]] = request[2]
+                    elif (request[2] != addresses.get(request[1])):
+                        print(f"ERROR AT LINE {counter}")
+                        print(f" REQUESTED {request[2]} at {request[0]} but got {addresses.get(request[1])}")
+                    counter += 1
+    
 
 def find_instances(dump_path):
     #file reading
@@ -217,7 +227,6 @@ def run_diagnostics(file_name, dir_name):
             for request_factor in range (1,5):
                 test_generator.generate(folder_path, test_number, "Regression", test, request_factor * 100, 16**stride)
     
-    #fix the run folder so that it can run nested folders as well
     out_path = run_folder(folder_path,dir_name)
     return out_path
 
