@@ -10,7 +10,7 @@
 using namespace std;
 
 int req_idx;
-int resp_idx;
+int total_resp_idx;
 int last_valid;
 
 int n_reqs;
@@ -22,6 +22,7 @@ vector<uint64_t> addr_array;
 vector<uint64_t> data_array;
 
 vector<bool> used;
+vector<uint64_t> inflight_idx;
 
 extern "C" void init(int max_inflight) {
 
@@ -73,11 +74,12 @@ extern "C" void init(int max_inflight) {
     //AILSA'S CODE
 
     req_idx = 0;
-    resp_idx = 0;
+    total_resp_idx = 0;
     last_valid = 0;
 
     for (int i=0; i<max_inflight; i++) {
         used.push_back(false);
+        inflight_idx.push_back(0);
     }
 
     cout << "max inflight: " << max_inflight << "\n";
@@ -110,17 +112,19 @@ extern "C" void tick(
     }
 
     // Should never recieve more responses than number of sent requests
-    assert((resp_idx <= req_idx) && "More responses seen than requests");
+    assert((total_resp_idx <= req_idx) && "More responses seen than requests");
 
+    int curr_resp_idx = inflight_idx[resp_id];
     if (resp_valid) {
-        cout << "Recieved RESP " << resp_idx << " --- data=" << resp_data << ", id=" << resp_id << ", write=" << all_vals[req_idx*3] << "\n";
+        assert(used[resp_id] && "Resp ID was not inflight");
+        cout << "Recieved RESP " << curr_resp_idx << " --- data=" << resp_data << ", id=" << resp_id << ", write=" << all_vals[curr_resp_idx*3] << "\n";
         // cout << "resp_valid: " << resp_valid << "\n";
         // bool check = resp_valid == 0;
         // cout << "resp_valid==0: " << check << "\n";
-        if (!all_vals[resp_idx*3]) { //If outstanding request was a read 
-            assert((resp_data == all_vals[resp_idx*3+2]) && "Response data does not match request");
+        if (!all_vals[curr_resp_idx*3]) { //If outstanding request was a read 
+            assert((resp_data == all_vals[curr_resp_idx*3+2]) && "Response data does not match request");
         }
-        resp_idx = resp_idx + 1;
+        total_resp_idx = total_resp_idx + 1;
         used[resp_id] = false;
     }
 
@@ -142,12 +146,13 @@ extern "C" void tick(
         *req_id = next_id;
         //cout << "Setting used\n";
         used[next_id] = true;
+        inflight_idx[next_id] = req_idx;
         cout << "Sending REQ " << req_idx << " --- addr=0x" << hex << all_vals[req_idx*3+1] << dec << ", data=" << all_vals[req_idx*3+2] << ", write=" << all_vals[req_idx*3] << ", id=" << next_id << "\n";
     }
 
     //cout << "req id: " << *req_id << "\n";
 
-    *done = (resp_idx == n_reqs);
+    *done = (total_resp_idx == n_reqs);
 
     //cout << "reached end\n";
 }
