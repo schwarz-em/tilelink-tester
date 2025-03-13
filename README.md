@@ -56,10 +56,3 @@ test_executer will generate the following files within your chipyard/sims/vcs/[d
 - diagnostics.csv : a CSV file generated from the regression tests that includes the test name, pass/nopass, and where the test errored
 - "some_test_name" : a text file for each test with the associated output from the DRAM model
 
-__DEFAULT LPDDR PARAMETERS:__<br>
-DEBUG = false, IDBITS = 10, ROWBITS = 18,  COLBITS = 8, 
-TIMEBITS = 6, RWTIMERBITS = 10, TFAWBITS = 30, BANKBITSTART = 5,
-RANKS = 1, BANKS = 8, BURSTLENGTH = 16, DQWIDTH = 16,
-BANKDEPTH = 6, QUEUEDEPTH = 256, WRQDEPTH = 256, RDQDEPTH = 256, 
-DFIAWIDTH = 6, DFIPHASES = 4, DFIDQMULTIPLE = 4, PHYDQLANESYNC = 3,
-PHYOUTPUTRATE = 2, PHYRCVRATE = 2, TLDATAWIDTH = 256
