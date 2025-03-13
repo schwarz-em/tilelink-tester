@@ -8,8 +8,11 @@ import datetime
 
 #EDIT THIS IF YOU WANT TO EDIT YOUR MAKE COMMAND
 make_command = r'''make MODEL=TLTestHarness MODEL_PACKAGE=ddr CONFIG=DDRTLTConfig CONFIG_PACKAGE=ddr BINARY=$RISCV/riscv64-unknown-elf/share/riscv-tests/isa/rv64ui-p-simple run-binary TOP=TLDDRTester CLOCK_PERIOD=5.0 EXTRA_SIM_FLAGS='+tltestfile=[FILEPATH]' > [COUNTER]'''
-# EDIT THIS WITH THE APPROPRIATE VCS DIRECTORY
-sims_directory = "/scratch/asun/chipyard/sims/vcs"
+
+current_directory = os.getcwd()
+cwd_index= current_directory.index("tools/tilelink-tester")
+sims_directory = current_directory[:cwd_index] + "sims/vcs"
+out_directory = current_directory[:cwd_index] + "sims/vcs/output/ddr.TLTestHarness.DDRTLTConfig/rv64ui-p-simple.out"
 
 parser = argparse.ArgumentParser()
 parser.add_argument('file_name', help="File Name")
