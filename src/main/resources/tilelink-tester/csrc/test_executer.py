@@ -13,9 +13,6 @@ parser.add_argument('file_name', help="File Name")
 parser.add_argument('-c', '--csv', action = "store_true", help = "Flag to convert to CSV", default = False)
 parser.add_argument('-v', '--validate', action = "store_true", help = "Flag to Validate a set of Test Files", default = False)
 parser.add_argument('-dir_name', action = "store", help = "Wee", default = "" )
-parser.add_argument('-r', action = "store_true", help = "Flag", default = False )
-parser.add_argument('-seed', help = "seed name", default = 0)
-parser.add_argument('-b', '--big', action = 'store_true',  help = "large numbers or small numbers?")
 
 
 current_directory = os.getcwd()
@@ -231,8 +228,6 @@ def main():
         find_instances(folder_path)
     elif (args.validate):
         validate_tests(folder_path)
-    elif (args.r):
-        run_diagnostics(args.file_name, args.dir_name, args.seed)
     else:
         run_folder(folder_path, args.dir_name)
 

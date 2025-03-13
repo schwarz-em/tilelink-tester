@@ -49,32 +49,6 @@ def generate(folder_path, num_tests, file_name, test_type, num_reqs, stride):
             preload_random_test(f,num_reqs,stride)
         f.close()
 
-            
-def run_folder(folder_path):
-    source_dir = None
-    counter = 0
-    
-    try:
-        source_dir = Path(folder_path)
-    except:
-        print("Error: Check the path to your directory")
-
-    files = source_dir.iterdir()
-
-    #Captures the current time of testing and dumps all log files into this directory
-    datetime_str = str(datetime.datetime.now()).replace(" ", "")
-    log_file_directory = sims_directory + "/" + datetime_str
-    create_folder(sims_directory + "/" + datetime_str)
-
-    for f in files:
-        print(f)
-        counter = counter + 1
-        final_command = (make_command.replace("[FILEPATH]", str(f))).replace("[COUNTER]", datetime_str +"/test_" + str(counter))
-        status = subprocess.run(final_command, cwd=sims_directory, text = True, capture_output=True, shell=True)
-        print("Return code_" + str(counter), status.returncode)
-        print("\n")
-        print("Output_" + str(counter), status.stdout)
-
 def single_addr_test(f,num_reqs):
     address= (0x100000000 + (0x0010 * random.randint(0,10)))
     num_reqs = num_reqs * 2
@@ -115,19 +89,14 @@ def preload_random_test(f,num_reqs,stride):
         f.write(", ".join(['0',str(random_key),str(read_requests.get(random_key))]))
         f.write("\n")
 
-def regression_test(file_name):
+def regression_test(file_name, folder_path):
     test_number = 1
-    folder_path = str(Path.cwd()) + "/test_files/" + "Regression_Test_" + str(file_name)
-    create_folder(folder_path)
     tests = ["single_address", "strided_random", "interleaved", "preload_random"]
-
     set_seed(seed_num)
-
     for test in tests:
         for stride in range(2,5):
             for request_factor in range (1,5):
-                generate(folder_path, test_number, "Regression", test, request_factor * 100, 16**stride)
-    return folder_path
+                generate(folder_path, test_number, "regression", test, request_factor * 100, 16**stride)
 
 def interleaved_test(f, num_reqs,stride):
     f.write(f"{num_reqs}\n")  
@@ -150,10 +119,10 @@ def interleaved_test(f, num_reqs,stride):
                 write_requests.pop(index_write)
 
 def create_folder(folder_path):
-    print("creating folder at")
-    print(folder_path)
     try:
         os.makedirs(folder_path)
+        print("creating folder at")
+        print(folder_path)
     except:
         pass
 
@@ -181,7 +150,7 @@ if __name__ == "__main__":
 
     print("Running Main Function")
     # If --option is not selected, we force the user to provide arg1 and arg2
-    if not args.num_reqs or not args.num_tests or not args.type:
+    if (not args.num_reqs or not args.num_tests or not args.type) and (args.type != "regression"):
         print("Error: You are generating test files. Test name, Type and # of requests must be specified.")
         sys.exit(1)  
     else:
@@ -200,8 +169,9 @@ if __name__ == "__main__":
     
     folder_path = ("test_files/%s_%d_%s" % (test_type, test_number, test_name))
     if (test_type == "regression"):
-        regression_test(test_name)
+        regression_test(test_name, folder_path)
     else:
-        generate(folder_path, test_number, test_name, test_type,req_number, stride)
+        file_path = generate(folder_path, test_number, test_name, test_type,req_number, stride)
+    print("TESTS LOCATED AT: ", folder_path)
 
  
