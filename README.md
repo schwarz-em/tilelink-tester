@@ -32,9 +32,6 @@ Right now, the python generator supports four kinds of tests: (you can easily wr
 - "preload_random_test": random values generated at a specified stride, and then random addresses are selected and read 
 - "strided_random_test": random values generated at a specified stride, and then read in the same order they were written
 
-<u>__IMPORTANT__</u>
-IN test_executer.py, PLEASE TAKE NOTE OF LINES 19-24 - they are specific to your machine / file_directories an MUST be edited. Apologies for any inconvenience...
-
 <u>python test_generator.py</u>
 - 'file_name'; REQUIRED!!! Just whatever name you want to give your tests
 - '-num_reqs'; Number of requests per test
