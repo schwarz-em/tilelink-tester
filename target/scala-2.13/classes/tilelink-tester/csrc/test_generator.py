@@ -6,7 +6,6 @@ import os
 import sys
 import datetime
 
-
 #EDIT THIS IF YOU WANT TO EDIT YOUR MAKE COMMAND
 make_command = r'''make MODEL=TLTestHarness MODEL_PACKAGE=ddr CONFIG=DDRTLTConfig CONFIG_PACKAGE=ddr BINARY=$RISCV/riscv64-unknown-elf/share/riscv-tests/isa/rv64ui-p-simple run-binary TOP=TLDDRTester CLOCK_PERIOD=5.0 EXTRA_SIM_FLAGS='+tltestfile=[FILEPATH]' > [COUNTER]'''
 # EDIT THIS WITH THE APPROPRIATE VCS DIRECTORY
@@ -19,6 +18,8 @@ parser.add_argument('-type', type=str, help="Type of Test", default='strided_ran
 parser.add_argument('-num_tests', type = int, help = "number of tests", default = 1)
 parser.add_argument('--run', action='store_true' , help = "run or just generate tests" )
 parser.add_argument('-stride', type = int, help = "stride distance", default = 256)
+parser.add_argument('-seed', type = int, help = "random seed value", default = 0)
+parser.add_argument('-b', '--big', action = 'store_true',  help = "large numbers or small numbers?")
 
 """
 TODO: 
@@ -77,7 +78,7 @@ def single_addr_test(f,num_reqs):
     f.write(f"{num_reqs}\n")  
     response_req = [1] * (num_reqs // 2) + [0] * (num_reqs // 2)
     hex_addresses = [f"0x{address:X}" for i in range(num_reqs //2)]
-    decimal_outputs = [random.randint(1,100) for i in range(num_reqs //2)]  
+    decimal_outputs = [random_val() for i in range(num_reqs //2)]  
     for i in range (num_reqs //2):
         f.write(", ".join(['1',str(hex_addresses[i]),str(decimal_outputs[i])]) + "\n")
         f.write(", ".join(['0',str(hex_addresses[i]),str(decimal_outputs[i])]))
@@ -88,8 +89,8 @@ def strided_random_test(f, num_reqs,stride):
     num_reqs = num_reqs * 2
     f.write(f"{num_reqs}\n")  
     response_req = [1] * (num_reqs // 2) + [0] * (num_reqs // 2)
-    hex_addresses = [f"0x{(0x100000000 + stride * i):X}" for i in range(1,num_reqs)] * (num_reqs*9//2)
-    decimal_outputs = [random.randint(1,100) for i in range(num_reqs//2)]  
+    hex_addresses = [f"0x{(0x100000000 + stride * i):X}" for i in range(0,num_reqs)] * (num_reqs*9//2)
+    decimal_outputs = [random_val() for i in range(num_reqs//2)]  
     for i in range (num_reqs // 2):
         f.write(", ".join(['1',str(hex_addresses[i]),str(decimal_outputs[i])]))
         f.write("\n")
@@ -98,7 +99,7 @@ def strided_random_test(f, num_reqs,stride):
         f.write("\n")
     
 def preload_random_test(f,num_reqs,stride):
-    write_requests = [(f"0x{(0x100000000 + stride *i):X}", random.randint(1,100)) for i in range(num_reqs)]
+    write_requests = [(f"0x{(0x100000000 + stride *i):X}", random_val()) for i in range(num_reqs)]
     read_number = random.randint(0,num_reqs)
     read_requests = {}
     f.write(f"{num_reqs + read_number}\n")  
@@ -114,7 +115,7 @@ def preload_random_test(f,num_reqs,stride):
 def interleaved_test(f, num_reqs,stride):
     f.write(f"{num_reqs}\n")  
     #random list of addresses, data pairs
-    write_requests = [(f"0x{(0x100000000 + stride * random.randint(0,num_reqs)):X}", random.randint(1,100)) for i in range(num_reqs)]
+    write_requests = [(f"0x{(0x100000000 + stride * random.randint(0,num_reqs)):X}", random_val()) for i in range(num_reqs)]
     read_requests = {}
     #for loop, random request
     for i in range(int(num_reqs/2)):
@@ -139,6 +140,25 @@ def create_folder(folder_path):
     except:
         pass
 
+def set_seed(num):
+        # Set a specific seed value
+    random.seed(num)
+    return 
+
+def random_val():
+    ret = 100
+    if (big):
+        ret = 2**256
+    return random.randint(0,ret)
+
+def set_big(val):
+    global big
+    if (val):
+        big = True
+    else:
+        big = False
+    return 
+
 if __name__ == "__main__":
     args = parser.parse_args()
 
@@ -155,7 +175,12 @@ if __name__ == "__main__":
     test_name = args.file_name
     test_number = args.num_tests
     stride = args.stride
+    seed_num = args.seed
+    big_temp = args.big
 
+    set_seed(seed_num)
+    set_big(big_temp)
+    
     folder_path = ("test_files/%s_%d_%s" % (test_type, test_number, test_name))
     generate(folder_path, test_number, test_name, test_type,req_number, stride)
 

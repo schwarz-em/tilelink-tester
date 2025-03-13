@@ -14,7 +14,8 @@ parser.add_argument('-c', '--csv', action = "store_true", help = "Flag to conver
 parser.add_argument('-v', '--validate', action = "store_true", help = "Flag to Validate a set of Test Files", default = False)
 parser.add_argument('-dir_name', action = "store", help = "Wee", default = "" )
 parser.add_argument('-r', action = "store_true", help = "Flag", default = False )
-
+parser.add_argument('-seed', help = "seed name", default = 0)
+parser.add_argument('-b', '--big', action = 'store_true',  help = "large numbers or small numbers?")
 
 #EDIT THIS IF YOU WANT TO EDIT YOUR MAKE COMMAND
 make_command = r'''make MODEL=TLTestHarness MODEL_PACKAGE=ddr CONFIG=DDRTLTConfig CONFIG_PACKAGE=ddr BINARY=$RISCV/riscv64-unknown-elf/share/riscv-tests/isa/rv64ui-p-simple run-binary TOP=TLDDRTester CLOCK_PERIOD=5.0 EXTRA_SIM_FLAGS='+tltestfile=[FILEPATH]' > [COUNTER]'''
@@ -57,7 +58,6 @@ def run_folder(folder_path, name):
             scrape_data(dump_path, counter)
             print("Return code_" + str(counter), status.returncode)
             print("\n")
-            print("Output_" + str(counter), status.stdout)
 
     scrape_diagnostics(log_file_directory)
     
@@ -79,22 +79,33 @@ def scrape_data(dump_path, test_num):
 def only_numerics(seq):
     return list(filter(type(seq).isdigit, seq))
 
-def validate_tests(file_path):
+def validate_tests(folder_path):
     addresses = {}
     counter = 0
-    with open (file_path, 'r') as test_file:
-        for row in test_file:
-            if (counter == 0) : 
-                counter += 1
-                continue
-            request = (row.replace(" ","")).split(',')
 
-            if (int(request[0])):
-                addresses[request[1]] = request[2]
-            elif (request[2] != addresses.get(request[1])):
-                print(f"ERROR AT LINE {counter}")
-                print(f" REQUESTED {request[2]} at {request[0]} but got {addresses.get(request[1])}")
-            counter += 1
+    try:
+        source_dir = Path(folder_path)
+    except:
+        print("Error: Check the path to your directory")
+
+    root_dir = Path(source_dir)
+    for file_path in root_dir.rglob("*"): 
+        counter = 0 
+        if file_path.is_file():
+            with open (file_path, 'r') as test_file:
+                for row in test_file:
+                    if (counter == 0) : 
+                        counter += 1
+                        continue
+                    request = (row.replace(" ","")).split(',')
+
+                    if (int(request[0])):
+                        addresses[request[1]] = request[2]
+                    elif (request[2] != addresses.get(request[1])):
+                        print(f"ERROR AT LINE {counter}")
+                        print(f" REQUESTED {request[2]} at {request[0]} but got {addresses.get(request[1])}")
+                    counter += 1
+    
 
 def find_instances(dump_path):
     #file reading
@@ -206,30 +217,34 @@ def scrape_diagnostics(folder_path):
 
     return csv_file_path      
 
-def run_diagnostics(file_name, dir_name):
+def run_diagnostics(file_name, dir_name,seed_num):
     test_number = 1
     folder_path = str(Path.cwd()) + "/test_files/" + "Regression_Test_" + str(file_name)
     create_folder(folder_path)
     tests = ["single_address", "strided_random", "interleaved", "preload_random"]
+
+    test_generator.set_seed(seed_num)
 
     for test in tests:
         for stride in range(2,5):
             for request_factor in range (1,5):
                 test_generator.generate(folder_path, test_number, "Regression", test, request_factor * 100, 16**stride)
     
-    #fix the run folder so that it can run nested folders as well
     out_path = run_folder(folder_path,dir_name)
     return out_path
 
 def main():
     args = parser.parse_args()
     folder_path = ("%s" % args.file_name)
+
+    test_generator.set_big(args.big)
+
     if (args.csv):
         find_instances(folder_path)
     elif (args.validate):
         validate_tests(folder_path)
     elif (args.r):
-        run_diagnostics(args.file_name, args.dir_name)
+        run_diagnostics(args.file_name, args.dir_name, args.seed)
     else:
         run_folder(folder_path, args.dir_name)
 
