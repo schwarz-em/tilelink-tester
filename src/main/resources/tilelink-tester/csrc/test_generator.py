@@ -115,6 +115,20 @@ def preload_random_test(f,num_reqs,stride):
         f.write(", ".join(['0',str(random_key),str(read_requests.get(random_key))]))
         f.write("\n")
 
+def regression_test(file_name):
+    test_number = 1
+    folder_path = str(Path.cwd()) + "/test_files/" + "Regression_Test_" + str(file_name)
+    create_folder(folder_path)
+    tests = ["single_address", "strided_random", "interleaved", "preload_random"]
+
+    set_seed(seed_num)
+
+    for test in tests:
+        for stride in range(2,5):
+            for request_factor in range (1,5):
+                generate(folder_path, test_number, "Regression", test, request_factor * 100, 16**stride)
+    return folder_path
+
 def interleaved_test(f, num_reqs,stride):
     f.write(f"{num_reqs}\n")  
     #random list of addresses, data pairs
@@ -185,5 +199,9 @@ if __name__ == "__main__":
     set_big(big_temp)
     
     folder_path = ("test_files/%s_%d_%s" % (test_type, test_number, test_name))
-    generate(folder_path, test_number, test_name, test_type,req_number, stride)
+    if (test_type == "regression"):
+        regression_test(test_name)
+    else:
+        generate(folder_path, test_number, test_name, test_type,req_number, stride)
 
+ 

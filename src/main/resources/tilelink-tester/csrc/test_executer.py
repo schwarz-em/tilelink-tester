@@ -221,22 +221,6 @@ def scrape_diagnostics(folder_path):
 
     return csv_file_path      
 
-def run_diagnostics(file_name, dir_name,seed_num):
-    test_number = 1
-    folder_path = str(Path.cwd()) + "/test_files/" + "Regression_Test_" + str(file_name)
-    create_folder(folder_path)
-    tests = ["single_address", "strided_random", "interleaved", "preload_random"]
-
-    test_generator.set_seed(seed_num)
-
-    for test in tests:
-        for stride in range(2,5):
-            for request_factor in range (1,5):
-                test_generator.generate(folder_path, test_number, "Regression", test, request_factor * 100, 16**stride)
-    
-    out_path = run_folder(folder_path,dir_name)
-    return out_path
-
 def main():
     args = parser.parse_args()
     folder_path = ("%s" % args.file_name)
