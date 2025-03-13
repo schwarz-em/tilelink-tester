@@ -17,12 +17,16 @@ parser.add_argument('-r', action = "store_true", help = "Flag", default = False 
 parser.add_argument('-seed', help = "seed name", default = 0)
 parser.add_argument('-b', '--big', action = 'store_true',  help = "large numbers or small numbers?")
 
+
+current_directory = os.getcwd()
+cwd_index= current_directory.index("tools/tilelink-tester")
+sims_directory = current_directory[:cwd_index] + "sims/vcs"
+out_directory = current_directory[:cwd_index] + "sims/vcs/output/ddr.TLTestHarness.DDRTLTConfig/rv64ui-p-simple.out"
+
+print("Running VCS in", sims_directory)
+print("Reading Simulation Output from", out_directory)
 #EDIT THIS IF YOU WANT TO EDIT YOUR MAKE COMMAND
 make_command = r'''make MODEL=TLTestHarness MODEL_PACKAGE=ddr CONFIG=DDRTLTConfig CONFIG_PACKAGE=ddr BINARY=$RISCV/riscv64-unknown-elf/share/riscv-tests/isa/rv64ui-p-simple run-binary TOP=TLDDRTester CLOCK_PERIOD=5.0 EXTRA_SIM_FLAGS='+tltestfile=[FILEPATH]' > [COUNTER]'''
-# EDIT THIS WITH THE APPROPRIATE VCS DIRECTORY
-sims_directory = "/scratch/asun/chipyard/sims/vcs"
-# EDIT THIS WITH THE APPROPRIATE .OUT FILE DIRECTORY
-out_directory = "/scratch/asun/chipyard/sims/vcs/output/ddr.TLTestHarness.DDRTLTConfig/rv64ui-p-simple.out"
 # EDIT THIS WITH THE LIST OF TESTS YOU WANT TO RUN
 #test_list = [avg_cycle_time]
 
