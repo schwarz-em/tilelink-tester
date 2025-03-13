@@ -14,7 +14,6 @@ parser.add_argument('-c', '--csv', action = "store_true", help = "Flag to conver
 parser.add_argument('-v', '--validate', action = "store_true", help = "Flag to Validate a set of Test Files", default = False)
 parser.add_argument('-dir_name', action = "store", help = "Wee", default = "" )
 
-
 current_directory = os.getcwd()
 cwd_index= current_directory.index("tools/tilelink-tester")
 sims_directory = current_directory[:cwd_index] + "sims/vcs"
@@ -221,8 +220,6 @@ def scrape_diagnostics(folder_path):
 def main():
     args = parser.parse_args()
     folder_path = ("%s" % args.file_name)
-
-    test_generator.set_big(args.big)
 
     if (args.csv):
         find_instances(folder_path)
