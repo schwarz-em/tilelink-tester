@@ -45,7 +45,7 @@ Right now, the python generator supports four kinds of tests: (you can easily wr
 - 'file_name'; REQUIRED!!! the ABSOLUTE path to the directory where your tests are located. 
 - '-v'; will check that your tests located in the specified directory make sense (IE: that your tests are not checking for incorrect values)
 - 'dir_name'; the name of the directory you want to label this test run as in your VCS directory (if not specified, will default to timestamp of the run)
-- '-c'; will convert the output of your tests to a csv - for performance testing - not robust at all lmfao will be deprioritized atm.
+- '-c'; will convert the output of your tests to a csv - for performance testing - is a beta feature atm.
 - '-r'; regression testing! will automatically re-generate and run the regression tests for you. Sorry it's not set up yet to let you specify a specific regression test instance / seed, but it's a work in progress.
 
 test_executer will generate the following files within your chipyard/sims/vcs/[dir_name] directory
