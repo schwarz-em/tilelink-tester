@@ -10,25 +10,19 @@
 using namespace std;
 
 int req_idx;
-int resp_idx;
+int total_resp_idx;
 int last_valid;
 
 int n_reqs;
+//AILSA'S CODE
+vector<uint64_t> all_vals;
+//AILSA'S CODE
 vector<uint64_t> req_types;
 vector<uint64_t> addr_array;
 vector<uint64_t> data_array;
 
 vector<bool> used;
-
-void read_line_to_array(string line, vector<uint64_t>& arr, int n_reqs, int base){
-    string readval;
-    stringstream ss(line);
-    while (ss.good()) {
-        getline(ss, readval, ',');
-        arr.push_back(stol(readval, nullptr, base));
-    }
-    assert((arr.size()==n_reqs) && "Improper file format: num reqs does not match length");
-}
+vector<uint64_t> inflight_idx;
 
 extern "C" void init(int max_inflight) {
 
@@ -36,6 +30,7 @@ extern "C" void init(int max_inflight) {
 
     // Read in test data file
     string test_file;
+    test_file = "test_data.txt";
     s_vpi_vlog_info info;
     if (!vpi_get_vlog_info(&info))
       abort();
@@ -61,22 +56,30 @@ extern "C" void init(int max_inflight) {
 
     cout << n_reqs << "\n";
 
-    // Read in request data arrays
-    getline(f, line);
-    read_line_to_array(line, req_types, n_reqs, 10);
-    cout << "req_types: " << req_types.size() << "\n";
-    getline(f, line);
-    read_line_to_array(line, addr_array, n_reqs, 16);
-    cout << "addr_array: " << addr_array.size() << "\n";
-    getline(f, line);
-    read_line_to_array(line, data_array, n_reqs, 10);
-    cout << "data_array: " << data_array.size() << "\n";
+    //AILSA'S CODE
+    all_vals.reserve(n_reqs*3);
+
+    for (int i =0; i < n_reqs; i++)
+    {   
+        getline(f, line);
+        std::string readval;
+        std::stringstream ss(line);
+        getline(ss, readval, ',');
+        all_vals.push_back(stol(readval, nullptr, 10));
+        getline(ss, readval, ',');
+        all_vals.push_back(stol(readval, nullptr, 16));
+        getline(ss, readval, ',');
+        all_vals.push_back(stol(readval, nullptr, 10));
+    }
+    //AILSA'S CODE
 
     req_idx = 0;
-    resp_idx = 0;
+    total_resp_idx = 0;
     last_valid = 0;
+
     for (int i=0; i<max_inflight; i++) {
         used.push_back(false);
+        inflight_idx.push_back(0);
     }
 
     cout << "max inflight: " << max_inflight << "\n";
@@ -109,17 +112,19 @@ extern "C" void tick(
     }
 
     // Should never recieve more responses than number of sent requests
-    assert((resp_idx <= req_idx) && "More responses seen than requests");
+    assert((total_resp_idx <= req_idx) && "More responses seen than requests");
 
+    int curr_resp_idx = inflight_idx[resp_id];
     if (resp_valid) {
-        cout << "Recieved RESP " << resp_idx << " --- data=" << resp_data << ", id=" << resp_id << ", write=" << req_types[resp_idx] << "\n";
+        assert(used[resp_id] && "Resp ID was not inflight");
+        cout << "Recieved RESP " << curr_resp_idx << " --- data=" << resp_data << ", id=" << resp_id << ", write=" << all_vals[curr_resp_idx*3] << "\n";
         // cout << "resp_valid: " << resp_valid << "\n";
         // bool check = resp_valid == 0;
         // cout << "resp_valid==0: " << check << "\n";
-        if (!req_types[resp_idx]) { //If outstanding request was a read 
-            assert((resp_data == data_array[resp_idx]) && "Response data does not match request");
+        if (!all_vals[curr_resp_idx*3]) { //If outstanding request was a read 
+            assert((resp_data == all_vals[curr_resp_idx*3+2]) && "Response data does not match request");
         }
-        resp_idx = resp_idx + 1;
+        total_resp_idx = total_resp_idx + 1;
         used[resp_id] = false;
     }
 
@@ -135,18 +140,19 @@ extern "C" void tick(
     *req_valid = (req_idx < n_reqs) && id_avail;
     last_valid = *req_valid;
     if (*req_valid) {
-        *req_addr = addr_array[req_idx];
-        *req_data = data_array[req_idx];
-        *req_is_write = req_types[req_idx];
+        *req_addr = all_vals[req_idx*3+1];
+        *req_data = all_vals[req_idx*3+2];
+        *req_is_write = all_vals[req_idx*3];
         *req_id = next_id;
         //cout << "Setting used\n";
         used[next_id] = true;
-        cout << "Sending REQ " << req_idx << " --- addr=0x" << hex << addr_array[req_idx] << dec << ", data=" << data_array[req_idx] << ", write=" << req_types[req_idx] << ", id=" << next_id << "\n";
+        inflight_idx[next_id] = req_idx;
+        cout << "Sending REQ " << req_idx << " --- addr=0x" << hex << all_vals[req_idx*3+1] << dec << ", data=" << all_vals[req_idx*3+2] << ", write=" << all_vals[req_idx*3] << ", id=" << next_id << "\n";
     }
 
     //cout << "req id: " << *req_id << "\n";
 
-    *done = (resp_idx == n_reqs);
+    *done = (total_resp_idx == n_reqs);
 
     //cout << "reached end\n";
 }
