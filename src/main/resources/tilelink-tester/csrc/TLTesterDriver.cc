@@ -105,11 +105,25 @@ extern "C" void tick(
     
     //cout << "tick\n";
 
+    uint64_t next_id = 0;
+    while(next_id < used.size() && used[next_id]) {
+        next_id++;
+    }
+
     bool req_fire = last_valid && req_ready;
     if (req_fire) {
-        cout << "req sent\n";
+        cout << "Sending REQ " << req_idx << " --- addr=0x" << hex << all_vals[req_idx*3+1] << dec << ", data=" << all_vals[req_idx*3+2] << ", write=" << all_vals[req_idx*3] << ", id=" << next_id << "\n";
+        //cout << "req sent\n";
+        used[next_id] = true;
+        inflight_idx[next_id] = req_idx;
+        // recalculate next_id
+        while(next_id < used.size() && used[next_id]) {
+            next_id++;
+        }
         req_idx = req_idx + 1;
     }
+
+    bool id_avail = next_id != used.size();
 
     // Should never recieve more responses than number of sent requests
     assert((total_resp_idx <= req_idx) && "More responses seen than requests");
@@ -128,11 +142,6 @@ extern "C" void tick(
         used[resp_id] = false;
     }
 
-    uint64_t next_id = 0;
-    while(next_id < used.size() && used[next_id]) {
-        next_id++;
-    }
-    bool id_avail = next_id != used.size();
     //cout << "next id: " << next_id << "\n";
     //cout << "id avail: " << id_avail << "\n";
 
@@ -145,9 +154,7 @@ extern "C" void tick(
         *req_is_write = all_vals[req_idx*3];
         *req_id = next_id;
         //cout << "Setting used\n";
-        used[next_id] = true;
-        inflight_idx[next_id] = req_idx;
-        cout << "Sending REQ " << req_idx << " --- addr=0x" << hex << all_vals[req_idx*3+1] << dec << ", data=" << all_vals[req_idx*3+2] << ", write=" << all_vals[req_idx*3] << ", id=" << next_id << "\n";
+        //cout << "Sending REQ " << req_idx << " --- addr=0x" << hex << all_vals[req_idx*3+1] << dec << ", data=" << all_vals[req_idx*3+2] << ", write=" << all_vals[req_idx*3] << ", id=" << next_id << "\n";
     }
 
     //cout << "req id: " << *req_id << "\n";
